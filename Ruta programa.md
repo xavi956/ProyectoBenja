@@ -16,7 +16,7 @@ El juego tendrá 3 laberintos( 16x16, 20x20, 24x24).
 - Con ello crear las bifurcaciones, si pasa por (6,5) crear un camino desde (6,1) a (6,5).
 - De estos caminos secundarios crear 1 bifurcación(nivel 1), 2 bifurcaciones(nivel 2) y 3 bifurcaciones +1 de cada una de estas(nivel 3)
 - Al renderizar el juego casilla=1 textura muro casilla=0 suelo
-![[16x16_times_table.png]]
+![Pasted image 20241210081717](https://github.com/user-attachments/assets/1903b861-7ee3-47e5-b50a-d70d4407e60d)
 ![[Pasted image 20241210082719.png]]![[Pasted image 20241210081552.png]]
 
 ## *Generar Objetos*
