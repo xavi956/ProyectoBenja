@@ -25,7 +25,7 @@ int main() {
 
     // Dibujar cuadrados iniciales
     while (true) {
-        cleardevice();
+        cleardevice();//no usar esto, cambiarlo tier1
 
         // cuadrado rojo (estático)
         setcolor(RED);
