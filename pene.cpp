@@ -1,94 +1,123 @@
 #include "graphics.h"
 #include <iostream>
-#include <math.h>
-#include <stdlib.h> // Provides exit
-#include <ctype.h>
+#include <vector>
+#include <ctime>
+#include <cstdlib>
 
-// tamaño cuadrados
-const int squareSize = 50;//--> variable const NO se puede modificar
+using namespace std;
+//tamaños
+const int TAMAÑO_CELDA = 20; 
+const int TAMAÑO_PLAYER = 15; 
 
-// Posiciones iniciales
-int grayX = 200, grayY = 200; // Cuadrado mov
-const int whiteX = 300, whiteY = 200; // Cuadrado  
+struct Player {//struct pq son 2 datos(obj)
+    int x, y; 
+};
 
-// colisión  
-bool colision(int x1, int y1, int x2, int y2, int size) { //Bool = True/false
-    // Verifica si los cuadrados se solapan horizontal y verticalmente
+// Funcion inicializar  laberinto 
+vector<vector<int>> initializeMaze(int size) {
+    vector<vector<int>> maze(size, vector<int>(size, 1)); // 1 representa  muro
 
-    if (x1 + size >= x2) {
-        return true;
+    // Crear bordes
+    for (int i = 0; i < size; i++) {
+        maze[0][i] = maze[size - 1][i] = 1;
+        maze[i][0] = maze[i][size - 1] = 1;
     }
-    else if (x1 <= x2 + size) {
-        return true;
+
+    return maze;
+}
+
+// Funcion conectar inicio y final  
+void conecInicFin(vector<vector<int>>& laberinto) {
+    int size = laberinto.size();
+    int x = 1, y = 1;
+
+    while (x < size - 2 || y < size - 2) {//-2 por los bordes
+        laberinto[y][x] = 0; // Crear camino--> varia valor celda a 0
+
+        // direccion aleatoria
+        int direction = rand() % 2; // 0 para derecha  1 para abajo
+        if (direction == 0 && x < size - 2) {
+            x++;
+        }
+        else if (y < size - 2) {
+            y++;
+        }
     }
-    else if (y1 + size >= y2) {
-        return true;
-    }
-    else if (y1 <= y2 + size) {
-        return true;
-    }
-    else {
-        return false;
+
+    laberinto[size - 2][size - 2] = 0; // Asegurar salida conectada x,y=0,0
+}
+
+//  dibujar el laberinto
+void dibujarLab(const vector<vector<int>>& laberinto) {
+    int size = laberinto.size();
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            if (laberinto[i][j] == 1) { // Dibujar muro
+                setfillstyle(SOLID_FILL, BLUE);
+                bar(j * TAMAÑO_CELDA, i * TAMAÑO_CELDA, (j + 1) * TAMAÑO_CELDA, (i + 1) * TAMAÑO_CELDA);
+            }
+            else { // Dibujar suelo
+                setfillstyle(SOLID_FILL, WHITE);
+                bar(j * TAMAÑO_CELDA, i * TAMAÑO_CELDA, (j + 1) * TAMAÑO_CELDA, (i + 1) * TAMAÑO_CELDA);
+            }
+        }
     }
 }
-void setblack(int x1, int y1, int x2, int y2) {
-    setcolor(BLACK);
-    setfillstyle(SOLID_FILL, BLACK);
-    rectangle(x1, y1, x2, y2);
-    floodfill((x1 + 1), (y1 + 1), BLACK);
+
+//  dibujar al jugador
+void DibujarPlayer(const Player& player) {
+    setfillstyle(SOLID_FILL, RED);
+    int x1 = player.x * TAMAÑO_CELDA + (TAMAÑO_CELDA - TAMAÑO_PLAYER) / 2;
+    int y1 = player.y * TAMAÑO_CELDA + (TAMAÑO_CELDA - TAMAÑO_PLAYER) / 2;
+    int x2 = x1 + TAMAÑO_PLAYER;
+    int y2 = y1 + TAMAÑO_PLAYER;
+    bar(x1, y1, x2, y2);//BAR-->comando graphics para dibujar rectangulo
 }
+
+//  al jugador
+void movePlayer(Player& player, const vector<vector<int>>& maze, char direccion) {
+    int newX = player.x;
+    int newY = player.y;
+
+    if (direccion == 'W' || direccion == 'w') newY--;
+    else if (direccion == 'A' || direccion == 'a') newX--;
+    else if (direccion == 'S' || direccion == 's') newY++;
+    else if (direccion == 'D' || direccion == 'd') newX++;
+
+    // Verificar si  posición  dentro de los límites y no muro
+    if (newX >= 0 && newX < maze.size() && newY >= 0 && newY < maze.size() && maze[newY][newX] == 0) {
+        player.x = newX;
+        player.y = newY;
+    }
+}
+
 int main() {
-    // Inicializar el modo gráfico
+    srand(time(0));
+
+    int mazeSize = 16; // Tamaño del laberinto (16x16 nivel 1)
+    vector<vector<int>> maze = initializeMaze(mazeSize);
+
+    conecInicFin(maze);
+
+    Player player = { 1, 1 }; // Posición inicial  jugador
+
     int gd = DETECT, gm;
     initgraph(&gd, &gm, "");
 
-    // Dibujar cuadrados iniciales
     while (true) {
-        
+        cleardevice();
 
-        // cuadrado rojo (estático)
-        setcolor(RED);
-        setfillstyle(SOLID_FILL, RED);
-        rectangle(100, 200, 100 + squareSize, 200 + squareSize);
-        floodfill(101, 201, RED);
+        dibujarLab(maze);
+        DibujarPlayer(player);
 
-        // cuadrado blanco (estático)
-        setcolor(WHITE);
-        setfillstyle(SOLID_FILL, WHITE);
-        rectangle(whiteX, whiteY, whiteX + squareSize, whiteY + squareSize);
-        floodfill(whiteX + 1, whiteY + 1, WHITE);
+        if (kbhit()) {
+            char key = getch();
+            movePlayer(player, maze, key);
+        }
 
-        // cuadrado gris (móvil)
-        setcolor(LIGHTGRAY);
-        setfillstyle(SOLID_FILL, LIGHTGRAY);
-        rectangle(grayX, grayY, grayX + squareSize, grayY + squareSize);
-        floodfill((grayX + 1), (grayY + 1), LIGHTGRAY);
-
-        
-
-        // Detectar colisión
-
-
-            // Mover cuadrado 
-            if (GetAsyncKeyState(VK_UP)) {// Flecha 
-                    setblack(grayX, grayY, grayX + squareSize, grayY + squareSize);
-                    grayY -= 10;
-            }
-            if (GetAsyncKeyState(VK_DOWN)) {// Flecha abajo
-                setblack(grayX, grayY, grayX + squareSize, grayY + squareSize);
-                grayY += 10;
-            }
-            if (GetAsyncKeyState(VK_LEFT)) {// Flecha izquierda
-                setblack(grayX, grayY, grayX + squareSize, grayY + squareSize);
-                grayX -= 10;
-            }
-            if (GetAsyncKeyState(VK_RIGHT)) {// Flecha derecha
-                setblack(grayX, grayY, grayX + squareSize, grayY + squareSize);
-                grayX += 10;
-            }
-        
-        delay(20);
+        delay(10); // 
     }
+
     closegraph();
     return 0;
 }
