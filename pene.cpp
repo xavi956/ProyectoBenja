@@ -14,8 +14,8 @@ struct Player {//struct pq son 2 datos(obj)
 };
 
 // Funcion inicializar  laberinto 
-vector<vector<int>> initializeMaze(int size) {
-    vector<vector<int>> maze(size, vector<int>(size, 1)); // 1 representa  muro
+vector<vector<int>> iniciarLab(int size) {
+    vector<vector<int>> maze(size, vector<int>(size, 1)); // 1 representa  muro / vector como array pero se puede modificar
 
     // Crear bordes
     for (int i = 0; i < size; i++) {
@@ -95,7 +95,7 @@ int main() {
     srand(time(0));
 
     int mazeSize = 16; // Tamaño del laberinto (16x16 nivel 1)
-    vector<vector<int>> maze = initializeMaze(mazeSize);
+    vector<vector<int>> maze = iniciarLab(mazeSize);
 
     conecInicFin(maze);
 
