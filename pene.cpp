@@ -15,15 +15,15 @@ struct Player {//struct pq son 2 datos(obj)
 
 // Funcion inicializar  laberinto 
 vector<vector<int>> iniciarLab(int size) {
-    vector<vector<int>> maze(size, vector<int>(size, 1)); // 1 representa  muro / vector como array pero se puede modificar
+    vector<vector<int>> lab(size, vector<int>(size, 1)); // 1 representa  muro / vector como array pero se puede modificar
 
     // Crear bordes
     for (int i = 0; i < size; i++) {
-        maze[0][i] = maze[size - 1][i] = 1;
-        maze[i][0] = maze[i][size - 1] = 1;
+        lab[0][i] = lab[size - 1][i] = 1;
+        lab[i][0] = lab[i][size - 1] = 1;
     }
 
-    return maze;
+    return lab;
 }
 
 // Funcion conectar inicio y final  
@@ -75,7 +75,7 @@ void DibujarPlayer(const Player& player) {
 }
 
 //  al jugador
-void movePlayer(Player& player, const vector<vector<int>>& maze, char direccion) {
+void movePlayer(Player& player, const vector<vector<int>>& lab, char direccion) {
     int newX = player.x;
     int newY = player.y;
 
@@ -85,7 +85,7 @@ void movePlayer(Player& player, const vector<vector<int>>& maze, char direccion)
     else if (direccion == 'D' || direccion == 'd') newX++;
 
     // Verificar si  posición  dentro de los límites y no muro
-    if (newX >= 0 && newX < maze.size() && newY >= 0 && newY < maze.size() && maze[newY][newX] == 0) {
+    if (newX >= 0 && newX < lab.size() && newY >= 0 && newY < lab.size() && lab[newY][newX] == 0) {
         player.x = newX;
         player.y = newY;
     }
@@ -94,8 +94,8 @@ void movePlayer(Player& player, const vector<vector<int>>& maze, char direccion)
 int main() {
     srand(time(0));
 
-    int mazeSize = 16; // Tamaño del laberinto (16x16 nivel 1)
-    vector<vector<int>> laber = iniciarLab(mazeSize);
+    int tamañoLab = 16; // Tamaño del laberinto (16x16 nivel 1)
+    vector<vector<int>> laber = iniciarLab(tamañoLab);
 
     conecInicFin(laber);
 
