@@ -95,9 +95,9 @@ int main() {
     srand(time(0));
 
     int mazeSize = 16; // Tamaño del laberinto (16x16 nivel 1)
-    vector<vector<int>> maze = iniciarLab(mazeSize);
+    vector<vector<int>> laber = iniciarLab(mazeSize);
 
-    conecInicFin(maze);
+    conecInicFin(laber);
 
     Player player = { 1, 1 }; // Posición inicial  jugador
 
@@ -107,12 +107,12 @@ int main() {
     while (true) {
         cleardevice();
 
-        dibujarLab(maze);
+        dibujarLab(laber);
         DibujarPlayer(player);
 
         if (kbhit()) {
             char key = getch();
-            movePlayer(player, maze, key);
+            movePlayer(player, laber, key);
         }
 
         delay(10); // 
