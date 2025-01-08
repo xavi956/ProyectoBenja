@@ -65,9 +65,9 @@ void dibujarLab(const vector<vector<int>>& laberinto) {
 }
 
 //  dibujar al jugador
-void DibujarPlayer(const Player& player) {
-    setfillstyle(SOLID_FILL, RED);
-    int x1 = player.x * TAMAÑO_CELDA + (TAMAÑO_CELDA - TAMAÑO_PLAYER) / 2;
+void DibujarPlayer(const Player& player) {//recibe del objeto player
+    setfillstyle(SOLID_FILL, RED);//x1,y1 posicion inicial luego se actualiza en x2 e y2
+    int x1 = player.x * TAMAÑO_CELDA + (TAMAÑO_CELDA - TAMAÑO_PLAYER) / 2;//accede al argumento x entre 2 para dividir el espacio bien entre izq y derecha
     int y1 = player.y * TAMAÑO_CELDA + (TAMAÑO_CELDA - TAMAÑO_PLAYER) / 2;
     int x2 = x1 + TAMAÑO_PLAYER;
     int y2 = y1 + TAMAÑO_PLAYER;
