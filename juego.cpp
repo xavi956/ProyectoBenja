@@ -19,7 +19,7 @@ struct Player {
 };
 
 // Inicializar laberinto
-vector<vector<int>> iniciarLab(int size) {
+vector<vector<int>> iniciarLab(int size) {//se usa vector y no array porque es dinamico y no estatico como el array
     vector<vector<int>> lab(size, vector<int>(size, 1));
     for (int i = 0; i < size; i++) {
         lab[0][i] = lab[size - 1][i] = 1;
@@ -99,7 +99,7 @@ void movePlayer(Player& player, const vector<vector<int>>& lab, char direccion) 
 }
 
 int main() {
-    srand(static_cast<unsigned int>(time(0)));
+    srand(static_cast<unsigned int>(time(0)));//num aleatorio
 
     vector<int> niveles = { 16, 20, 24 };
     int nivelActual = 0;
