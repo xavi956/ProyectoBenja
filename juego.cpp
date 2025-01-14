@@ -19,7 +19,7 @@ struct Player {
 };
 
 // Inicializar laberinto
-vector<vector<int>> iniciarLab(int size) {//se usa vector y no array porque es dinamico y no estatico como el array
+vector<vector<int>> iniciarLab(int size) {
     vector<vector<int>> lab(size, vector<int>(size, 1));
     for (int i = 0; i < size; i++) {
         lab[0][i] = lab[size - 1][i] = 1;
@@ -85,10 +85,10 @@ void movePlayer(Player& player, const vector<vector<int>>& lab, char direccion) 
     int newX = player.x;
     int newY = player.y;
 
-    if (direccion == 'W' || direccion == 'w') newY--;
-    else if (direccion == 'A' || direccion == 'a') newX--;
-    else if (direccion == 'S' || direccion == 's') newY++;
-    else if (direccion == 'D' || direccion == 'd') newX++;
+    if (direccion == 'W' || direccion == 'w' || direccion == KEY_UP) newY--;
+    else if (direccion == 'A' || direccion == 'a' || direccion == KEY_LEFT) newX--;
+    else if (direccion == 'S' || direccion == 's' || direccion == KEY_DOWN) newY++;
+    else if (direccion == 'D' || direccion == 'd' || direccion == KEY_RIGHT) newX++;
 
     if (newX >= 0 && newX < static_cast<int>(lab.size()) &&
         newY >= 0 && newY < static_cast<int>(lab.size()) &&
@@ -98,6 +98,27 @@ void movePlayer(Player& player, const vector<vector<int>>& lab, char direccion) 
     }
 }
 
+// Función de pausa
+void pausa(steady_clock::time_point& inicioTiempo) {
+    cleardevice();
+    outtextxy(20, 20, "PAUSA - Presiona cualquier tecla para continuar");
+    
+    // Guardamos el tiempo de inicio antes de la pausa
+    steady_clock::time_point pausaInicio = steady_clock::now();
+
+    // Aquí esperamos hasta que el jugador presione una tecla
+    while (true) {
+        if (kbhit()) {
+            getch(); // Captura la tecla presionada para reanudar
+            // Ajusta el tiempo de inicio sumando el tiempo de la pausa
+            auto pausaDuracion = steady_clock::now() - pausaInicio;
+            inicioTiempo += pausaDuracion;  // Ajustamos el tiempo restante después de la pausa
+            return;
+        }
+    }
+}
+
+// Función principal
 int main() {
     srand(static_cast<unsigned int>(time(0)));//num aleatorio
 
@@ -112,7 +133,6 @@ int main() {
         int tamañoLab = niveles[nivelActual];
         vector<vector<int>> laber = iniciarLab(tamañoLab);
         conecInicFin(laber);
-        //en vez de cleardevice solo dibuja al jugador otra vez
         Player player = { 1, 1 };
         Player prevPlayer = player;
         bool juegoActivo = true;
@@ -148,7 +168,15 @@ int main() {
 
             if (kbhit()) {
                 char key = getch();
-                movePlayer(player, laber, key);
+
+                if (key == 27) {  // Si presionas ESC para pausar
+                    pausa(inicioTiempo);  // Pausa el juego y ajusta el tiempo
+                    dibujarLab(laber); // Redibuja el laberinto después de la pausa
+                }
+                else {
+                    movePlayer(player, laber, key);
+                }
+
                 actualizarJuego(player, laber, prevPlayer);
             }
 
