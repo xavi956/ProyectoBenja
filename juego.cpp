@@ -9,9 +9,20 @@
 using namespace std;
 using namespace chrono;
 
-// Tamaños
-const int TAMAÑO_CELDA = 20;
 const int TAMAÑO_PLAYER = 15;
+
+// Colores -->
+const int COLOR_FONDO = DARKGRAY;
+const int COLOR_PAREDES = BLACK;
+const int COLOR_CAMINOS = DARKGRAY;
+const int COLOR_JUGADOR = LIGHTRED;
+const int COLOR_TEXTO = WHITE;
+const int COLOR_OPCION_HOVER = LIGHTBLUE;
+const int COLOR_OPCION_NORMAL = COLOR_TEXTO;
+const int COLOR_OSCURIDAD = BLACK;
+
+
+const int RANGO_VISION = 2;
 
 // Estructura del jugador
 struct Player {
@@ -42,42 +53,48 @@ void conecInicFin(vector<vector<int>>& laberinto) {
     laberinto[size - 2][size - 2] = 0;
 }
 
-// Dibujar una celda
-void dibujarCelda(int x, int y, int color) {
+// Dibujar celda
+void dibujarCelda(int x, int y, int color, int tamañoCelda) {
     setfillstyle(SOLID_FILL, color);
-    bar(x * TAMAÑO_CELDA, y * TAMAÑO_CELDA, (x + 1) * TAMAÑO_CELDA, (y + 1) * TAMAÑO_CELDA);
+    bar(x * tamañoCelda, y * tamañoCelda, (x + 1) * tamañoCelda, (y + 1) * tamañoCelda);
 }
 
-// Dibujar el laberinto
-void dibujarLab(const vector<vector<int>>& laberinto) {
+// Dibujar visibilidad restringida
+void DibLabRest(const vector<vector<int>>& laberinto, int anchoPantalla, int altoPantalla, const Player& player) {
     int size = laberinto.size();
+    int tamañoCelda = min(anchoPantalla / size, altoPantalla / size);
+
+ 
     for (int i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
-            if (laberinto[i][j] == 1) {
-                dibujarCelda(j, i, BLUE);
+        for (int j = 0; j < size; j++) {//doble para recorrer por x·y
+            // Si la celda  dentro del rango  jugador
+            //abs --> val absoluto
+            if (abs(player.y - i) <= RANGO_VISION && abs(player.x - j) <= RANGO_VISION) {
+                // Si es una pared (1), primer bucle para verificar si en rango, cambiar color paredes(o no)
+                if (laberinto[i][j] == 1) {
+                    dibujarCelda(j, i, COLOR_PAREDES, tamañoCelda);
+                }
+                else {
+                    // Si es un camino (0), dibujar el camino
+                    dibujarCelda(j, i, COLOR_CAMINOS, tamañoCelda);
+                }
             }
             else {
-                dibujarCelda(j, i, WHITE);
+                // Fuera del rango 
+                dibujarCelda(j, i, COLOR_OSCURIDAD, tamañoCelda);
             }
         }
     }
 }
 
 // Dibujar al jugador
-void DibujarPlayer(const Player& player) {
-    setfillstyle(SOLID_FILL, RED);
-    int x1 = player.x * TAMAÑO_CELDA + (TAMAÑO_CELDA - TAMAÑO_PLAYER) / 2;
-    int y1 = player.y * TAMAÑO_CELDA + (TAMAÑO_CELDA - TAMAÑO_PLAYER) / 2;
+void DibujarPlayer(const Player& player, int tamañoCelda) {
+    setfillstyle(SOLID_FILL, COLOR_JUGADOR);
+    int x1 = player.x * tamañoCelda + (tamañoCelda - TAMAÑO_PLAYER) / 2;
+    int y1 = player.y * tamañoCelda + (tamañoCelda - TAMAÑO_PLAYER) / 2;
     int x2 = x1 + TAMAÑO_PLAYER;
     int y2 = y1 + TAMAÑO_PLAYER;
     bar(x1, y1, x2, y2);
-}
-
-// Actualizar el juego
-void actualizarJuego(Player& player, const vector<vector<int>>& lab, Player& prevPlayer) {
-    dibujarCelda(prevPlayer.x, prevPlayer.y, WHITE);
-    DibujarPlayer(player);
-    prevPlayer = player;
 }
 
 // Mover al jugador
@@ -98,98 +115,131 @@ void movePlayer(Player& player, const vector<vector<int>>& lab, char direccion) 
     }
 }
 
-// Función de pausa
-void pausa(steady_clock::time_point& inicioTiempo) {
+// Menú de inicio interactivo
+int menuInicioInteractivo() {
+    setbkcolor(COLOR_FONDO);
     cleardevice();
-    outtextxy(20, 20, "PAUSA - Presiona cualquier tecla para continuar");
-    
-    // Guardamos el tiempo de inicio antes de la pausa
-    steady_clock::time_point pausaInicio = steady_clock::now();
 
-    // Aquí esperamos hasta que el jugador presione una tecla
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+
+    const int OPCION_INICIAR = 0;
+    const int OPCION_SALIR = 1;
+
+    const int x = 200, yInicio = 150, separacion = 50;
+
+    int opcionSeleccionada = OPCION_INICIAR;
+
     while (true) {
-        if (kbhit()) {
-            getch(); // Captura la tecla presionada para reanudar
-            // Ajusta el tiempo de inicio sumando el tiempo de la pausa
-            auto pausaDuracion = steady_clock::now() - pausaInicio;
-            inicioTiempo += pausaDuracion;  // Ajustamos el tiempo restante después de la pausa
-            return;
-        }
+        cleardevice();
+        char titulo[] = "LABERINTO ";
+        outtextxy(200, 50, titulo);
+        outtextxy(200, 100, const_cast<char*>("¡Así fue como te perdiste!"));
+        outtextxy(200, 150, const_cast<char*>("Usa W/A/S/D para moverte."));
+
+        char iniciar[] = "1. Iniciar Juego";
+        char salir[] = "2. Salir";
+        outtextxy(200, 200, iniciar);
+        outtextxy(200, 250, salir);
+
+        char key = getch();
+        if (key == '1') return 1;
+        if (key == '2') return 2;
     }
 }
 
 // Función principal
 int main() {
-    srand(static_cast<unsigned int>(time(0)));//num aleatorio
+    srand(static_cast<unsigned int>(time(0)));
 
-    vector<int> niveles = { 16, 20, 24 };
-    int nivelActual = 0;
-    const int TIEMPO_LIMITE = 60;
-
+    // Aumentar el tamaño de la ventana
     int gd = DETECT, gm;
     initgraph(&gd, &gm, "");
 
-    while (nivelActual < static_cast<int>(niveles.size())) {
-        int tamañoLab = niveles[nivelActual];
-        vector<vector<int>> laber = iniciarLab(tamañoLab);
-        conecInicFin(laber);
-        Player player = { 1, 1 };
-        Player prevPlayer = player;
-        bool juegoActivo = true;
+    
+    int ancho = 1024;  
+    int alto = 768;    
 
-        auto inicioTiempo = steady_clock::now();
+    // tamaño pantalla
+    initwindow(ancho, alto);
 
-        dibujarLab(laber);
-        DibujarPlayer(player);
+    int tiempoRestante = 60; 
+    int tiempoAnterior = 0; 
 
-        while (juegoActivo) {
-            auto tiempoActual = steady_clock::now();
-            int tiempoRestante = TIEMPO_LIMITE - static_cast<int>(duration_cast<seconds>(tiempoActual - inicioTiempo).count());
+    while (true) {
+        int opcion = menuInicioInteractivo();
+        if (opcion == 2) break; // Salir del juego
 
-            setcolor(WHITE);
-            string textoTiempo = "Tiempo restante: " + to_string(max(0, tiempoRestante)) + " s";
-            char tiempoChar[100];
-            strcpy(tiempoChar, textoTiempo.c_str());
-            outtextxy(10, 10, tiempoChar);
+        vector<int> niveles = { 16, 20, 24 };
+        int nivelActual = 0;
 
-            if (tiempoRestante <= 0) {
-                outtextxy(200, 200, "Has perdido :(");
-                juegoActivo = false;
-                break;
-            }
+        while (nivelActual < static_cast<int>(niveles.size())) {
+            int tamañoLab = niveles[nivelActual];
+            vector<vector<int>> laber = iniciarLab(tamañoLab);
+            conecInicFin(laber);
+            Player player = { 1, 1 };
+            Player prevPlayer = player;
+            bool juegoActivo = true;
 
-            if (player.x == tamañoLab - 2 && player.y == tamañoLab - 2) {
-                outtextxy(200, 200, "¡Nivel completado!");
-                delay(2000);
-                nivelActual++;
-                juegoActivo = false;
-                break;
-            }
+            auto inicioTiempo = steady_clock::now();
 
-            if (kbhit()) {
-                char key = getch();
+            setbkcolor(COLOR_FONDO);
+            cleardevice();
+            //min valor menor
+            int tamañoCelda = min(ancho / tamañoLab, alto / tamañoLab);//ajustar tamaño niveles a pantalla
 
-                if (key == 27) {  // Si presionas ESC para pausar
-                    pausa(inicioTiempo);  // Pausa el juego y ajusta el tiempo
-                    dibujarLab(laber); // Redibuja el laberinto después de la pausa
+            while (juegoActivo) {
+                // Calcular tiempo restante
+                auto tiempoActual = steady_clock::now();
+                int tiempoPasado = static_cast<int>(duration_cast<seconds>(tiempoActual - inicioTiempo).count());
+                if (tiempoPasado > tiempoAnterior) {
+                    tiempoRestante--; // Disminuir el tiempo cada segundo
+                    tiempoAnterior = tiempoPasado; // Actualizar tiempo anterior
                 }
-                else {
+
+                
+                setcolor(COLOR_TEXTO);
+                string textoTiempo = "Tiempo: " + to_string(max(0, tiempoRestante)) + " s";
+                char tiempoChar[100];
+                strcpy_s(tiempoChar, textoTiempo.c_str());
+                outtextxy(ancho - 200, 10, tiempoChar); // Mostrar  tiempo a la derecha
+
+               
+                if (tiempoRestante <= 0) {
+                    outtextxy(200, 200, const_cast<char*>("¡Tiempo agotado! Has perdido."));
+                    juegoActivo = false;
+                    break;
+                }
+
+                //  player ha llegado al final del nivel
+                if (player.x == tamañoLab - 2 && player.y == tamañoLab - 2) {
+                    outtextxy(200, 200, const_cast<char*>("¡Nivel completado!"));
+                    delay(2000);
+                    nivelActual++;
+                    juegoActivo = false;
+                    break;
+                }
+
+                
+                DibLabRest(laber, ancho, alto, player);
+                DibujarPlayer(player, tamañoCelda);
+
+                if (kbhit()) {
+                    char key = getch();
                     movePlayer(player, laber, key);
                 }
 
-                actualizarJuego(player, laber, prevPlayer);
+                delay(50);
             }
 
-            delay(10);
+            if (nivelActual == static_cast<int>(niveles.size())) {
+                outtextxy(200, 200, const_cast<char*>("¡Felicitaciones! Has completado todos los niveles."));
+                break;
+            }
         }
 
-        if (nivelActual == static_cast<int>(niveles.size())) {
-            outtextxy(200, 200, "¡Felicitaciones! Has completado todos los niveles.");
-            break;
-        }
+        delay(3000);
     }
 
-    delay(3000);
     closegraph();
     return 0;
 }
