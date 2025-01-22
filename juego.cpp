@@ -53,6 +53,39 @@ void conecInicFin(vector<vector<int>>& laberinto) {
     laberinto[size - 2][size - 2] = 0;
 }
 
+void crearRamificaciones(vector<vector<int>>& laberinto) {
+
+    int size = laberinto.size();
+    int x = 1, y = 1;
+    
+    for (int i = 1; i < size - 2; i++) {
+        for (int j = 1; j < size - 2; j++) {
+            if (laberinto[j][i] == 0) {
+
+                int direction = rand() % 2;
+                if (direction == 0 && (x++ == 1 || x-- == 1) && x < size - 2) {
+                    if (rand() % 2 == 1) {
+                        x++;
+                    }
+                    else {
+                        x--;
+                    }
+                    laberinto[y][x] = 0;
+                }
+                else if ( (y++ == 1 || y-- == 1) && y < size - 2) {
+                    if (rand() % 2 == 1 ) {
+                        y++;
+                    }
+                    else {
+                        y--;
+                    }
+                    laberinto[y][x] = 0;
+                }
+            }
+        }
+    }
+}
+
 // Dibujar celda
 void dibujarCelda(int x, int y, int color, int tamañoCelda) {
     setfillstyle(SOLID_FILL, color);
@@ -64,7 +97,7 @@ void DibLabRest(const vector<vector<int>>& laberinto, int anchoPantalla, int alt
     int size = laberinto.size();
     int tamañoCelda = min(anchoPantalla / size, altoPantalla / size);
 
- 
+
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {//doble para recorrer por x·y
             // Si la celda  dentro del rango  jugador
@@ -155,15 +188,15 @@ int main() {
     int gd = DETECT, gm;
     initgraph(&gd, &gm, "");
 
-    
-    int ancho = 1024;  
-    int alto = 768;    
+
+    int ancho = 1024;
+    int alto = 768;
 
     // tamaño pantalla
     initwindow(ancho, alto);
 
-    int tiempoRestante = 60; 
-    int tiempoAnterior = 0; 
+    int tiempoRestante = 60;
+    int tiempoAnterior = 0;
 
     while (true) {
         int opcion = menuInicioInteractivo();
@@ -176,6 +209,7 @@ int main() {
             int tamañoLab = niveles[nivelActual];
             vector<vector<int>> laber = iniciarLab(tamañoLab);
             conecInicFin(laber);
+            crearRamificaciones(laber);
             Player player = { 1, 1 };
             Player prevPlayer = player;
             bool juegoActivo = true;
@@ -186,6 +220,8 @@ int main() {
             cleardevice();
             //min valor menor
             int tamañoCelda = min(ancho / tamañoLab, alto / tamañoLab);//ajustar tamaño niveles a pantalla
+            DibLabRest(laber, ancho, alto, player);
+            DibujarPlayer(player, tamañoCelda);
 
             while (juegoActivo) {
                 // Calcular tiempo restante
@@ -196,14 +232,14 @@ int main() {
                     tiempoAnterior = tiempoPasado; // Actualizar tiempo anterior
                 }
 
-                
+
                 setcolor(COLOR_TEXTO);
                 string textoTiempo = "Tiempo: " + to_string(max(0, tiempoRestante)) + " s";
                 char tiempoChar[100];
                 strcpy_s(tiempoChar, textoTiempo.c_str());
                 outtextxy(ancho - 200, 10, tiempoChar); // Mostrar  tiempo a la derecha
 
-               
+
                 if (tiempoRestante <= 0) {
                     outtextxy(200, 200, const_cast<char*>("¡Tiempo agotado! Has perdido."));
                     juegoActivo = false;
@@ -219,16 +255,14 @@ int main() {
                     break;
                 }
 
-                
-                DibLabRest(laber, ancho, alto, player);
-                DibujarPlayer(player, tamañoCelda);
 
                 if (kbhit()) {
                     char key = getch();
                     movePlayer(player, laber, key);
+                    DibLabRest(laber, ancho, alto, player);
+                    DibujarPlayer(player, tamañoCelda);
                 }
 
-                delay(50);
             }
 
             if (nivelActual == static_cast<int>(niveles.size())) {
